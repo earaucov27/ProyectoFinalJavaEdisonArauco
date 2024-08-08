@@ -95,7 +95,7 @@ src
 ## Clase Principal EcommerceApplication
 
 ```java
-package com.example.ecommerce;
+package com.ecommerce.ecommerce.ProyectoFinalJavaEdisonArauco;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
