@@ -6,7 +6,7 @@ Este proyecto es una aplicación de comercio electrónico desarrollada con Sprin
 
 ## Evidencias
 
-Las Evidencias de funcionamiento a traves de postman las podran encontrar al final de este README
+Las evidencias de funcionamiento a través de Postman las podrán encontrar al final de este README.
 
 ## Tecnologías Utilizadas
 
@@ -15,6 +15,7 @@ Las Evidencias de funcionamiento a traves de postman las podran encontrar al fin
 - Spring Data JPA
 - MySQL
 - Lombok
+- Springdoc OpenAPI 3
 
 ## Requisitos Previos
 
@@ -29,19 +30,23 @@ Las Evidencias de funcionamiento a traves de postman las podran encontrar al fin
 - Crea una base de datos en MySQL:
   
 ```sql
-CREATE DATABASE ecommerce;
+CREATE DATABASE e_commerce;
 ```
 
 ## Actualiza el archivo application.properties con tu configuración de MySQL:
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/ecommerce
-spring.datasource.username=tu_usuario_mysql
-spring.datasource.password=tu_contraseña_mysql
+spring.application.name=ProyectoFinalJavaEdisonArauco
+spring.datasource.url=jdbc:mysql://localhost:3306/e_commerce
+spring.datasource.username=tu_usuario_configurado
+spring.datasource.password=tu_contraseña_configurada
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.show-sql=true
 spring.jpa.generate-ddl=true
 spring.jpa.hibernate.ddl-auto=update
+
+# Swagger UI
+springfox.documentation.swagger.v2.path=/api-docs
 ```
 
 ## Compilar y Ejecutar la Aplicación
@@ -60,26 +65,28 @@ src
     │   └── com
     │       └── example
     │           └── ecommerce
+    │               ├── config
+    │               │   └── SwaggerConfig.java
     │               ├── controllers
     │               │   ├── ClientController.java
     │               │   ├── ProductController.java
     │               │   ├── InvoiceController.java
-    │               │   ├── InvoiceDetailController.java
+    │               │   └── CartController.java
     │               ├── entities
     │               │   ├── Client.java
     │               │   ├── Product.java
     │               │   ├── Invoice.java
-    │               │   ├── InvoiceDetail.java
+    │               │   └── Cart.java
     │               ├── repositories
     │               │   ├── ClientRepository.java
     │               │   ├── ProductRepository.java
     │               │   ├── InvoiceRepository.java
-    │               │   ├── InvoiceDetailRepository.java
+    │               │   └── CartRepository.java
     │               ├── services
     │               │   ├── ClientService.java
     │               │   ├── ProductService.java
     │               │   ├── InvoiceService.java
-    │               │   ├── InvoiceDetailService.java
+    │               │   └── CartService.java
     │               └── EcommerceApplication.java
     └── resources
         ├── application.properties
@@ -106,123 +113,125 @@ public class EcommerceApplication {
 
 ## Productos
 
-- Crear o actualizar un producto
+- Crear un producto
   
   URL: POST ```/api/v1/products```
-```json
-{
-    "id": 1, // incluir solo si se está actualizando
-    "description": "Producto 1 Modificado",
-    "code": "P001",
-    "stock": 200,
-    "price": 19.99
-}
-```
+  ```json
+  {
+      "title": "Producto de Ejemplo",
+      "stock": 100,
+      "price": 29.99
+  }
+  ```
+
 - Leer productos
   
-  URL: GET ```json /api/v1/products ```
+  URL: GET ```/api/v1/products```
 
-- Leer un producto
+- Leer un producto por ID
   
   URL: GET ```/api/v1/products/{id}```
 
-- Eliminar un producto
+- Actualizar un producto por ID
   
-  URL: DELETE ```json /api/v1/products/{id}```
+  URL: PUT ```/api/v1/products/{id}```
+  ```json
+  {
+      "title": "Producto Actualizado",
+      "stock": 150,
+      "price": 39.99
+  }
+  ```
 
 ## Clientes
 
 - Registrar un cliente
   
   URL: POST ```/api/v1/auth/register```
-```json
-{
-    "name": "John",
-    "lastname": "Doe",
-    "docnumber": "12345678901"
-}
-```
+  ```json
+  {
+      "name": "Juan",
+      "lastname": "Pérez",
+      "docnumber": 123456789
+  }
+  ```
 
 - Actualizar el perfil de un cliente
   
-  URL: POST ```/api/v1/auth/register``` (Incluyendo el ID del cliente en el body)
-```json
-{
-    "id": 1,
-    "name": "John Updated",
-    "lastname": "Doe Updated",
-    "docnumber": "12345678901"
-}
-```
+  URL: PUT ```/api/v1/auth/me```
+  ```json
+  {
+      "id": 1,
+      "name": "Juan Actualizado",
+      "lastname": "Pérez Actualizado",
+      "docnumber": 987654321
+  }
+  ```
 
-## Carrito
+## Carritos
 
 - Agregar producto al carrito
   
-  URL: POST ```/api/v1/carts```
-```json
-{
-    "clientId": 1,
-    "productId": 1,
-    "amount": 2
-}
-```
+  URL: POST ```/api/v1/carts/{clientId}/{productId}/{quantity}```
+
 - Quitar producto del carrito
   
-  URL: DELETE ```/api/v1/carts```
-```json
-{
-    "clientId": 1,
-    "productId": 1,
-    "amount": 1
-}
-```
+  URL: DELETE ```/api/v1/carts/{cartId}```
+
+- Leer los productos del carrito de un cliente (con delivered en false)
+  
+  URL: GET ```/api/v1/carts/{clientId}```
+
 ## Comprobantes
 
 - Generar comprobante
   
   URL: POST ```/api/v1/invoices```
-```json
-{
-    "clientId": 1,
-    "details": [
-        {
-            "productId": 1,
-            "amount": 2,
-            "price": 19.99
-        }
-    ]
-}
-```
-- Leer comprobante del cliente
-  
-  URL: GET ```/api/v1/invoices/{cid}```
+  ```json
+  {
+      "clientId": 1
+  }
+  ```
 
-## Detalles del Comprobante
+- Leer el último comprobante emitido para el cliente
+  
+  URL: GET ```/api/v1/invoices/{clientId}```
 
-- Crear detalle de comprobante
+# Evidencias
 
-URL: POST ```/api/v1/invoice-details```
+## Crear Producto
+![image](https://github.com/user-attachments/assets/bbc570f8-69d1-4fcb-9ab9-b7a384197e39)
 
-```json
-{
-    "invoiceId": 1,
-    "productId": 1,
-    "amount": 2,
-    "price": 19.99
-}
-```
-- Leer detalles de comprobante
-  
-  URL: GET ```/api/v1/invoice-details```
-  
-- Leer un detalle de comprobante
-  
-  URL: GET ```/api/v1/invoice-details/{id}```
-  
-- Eliminar un detalle de comprobante
-  
-  URL: DELETE ```/api/v1/invoice-details/{id}```
+## Listar Productos
+![image](https://github.com/user-attachments/assets/8b1102b3-bc79-4ec9-aa7f-70fc1d6afd01)
+
+## Listar Producto por ID
+![image](https://github.com/user-attachments/assets/02271912-59b5-4501-92e4-6988c70bb6fb)
+
+## Modificar Producto
+![image](https://github.com/user-attachments/assets/b9ca6be5-f25a-4809-9c47-9c6a79fb6f85)
+
+## Registrar Cliente
+![image](https://github.com/user-attachments/assets/955ead58-3cc3-4e54-831b-17490e7045fa)
+
+## Actualizar Cliente
+![image](https://github.com/user-attachments/assets/c74a825b-437f-4fe7-8f8c-c03613ef2f2b)
+
+## Agregar Producto al Carrito
+![image](https://github.com/user-attachments/assets/c70d756a-95e4-4a78-9b1c-802e05885bac)
+
+## Quitar Producto del Carrito
+![image](https://github.com/user-attachments/assets/07d03ad3-885c-4d42-b6a2-f03c9e47d76e)
+
+## Leer productos del carrito
+![image](https://github.com/user-attachments/assets/6f252789-b6af-4a8e-acb1-1cb68f5476df)
+
+## Generar Comprobante
+![image](https://github.com/user-attachments/assets/e28fd9d7-0ff0-43b0-af3b-356a6047fd2c)
+
+## Leer Comprobante del Cliente
+![image](https://github.com/user-attachments/assets/df3bdf4e-f160-429b-8222-c004bece678f)
+
 
 ## Contribuciones
 
@@ -235,26 +244,5 @@ Este proyecto está bajo la licencia MIT.
 ### Clonar el Repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/ecommerce.git
-cd ecommerce
+git clone https://github.com/earaucov27/ProyectoFinalJavaEdisonArauco.git
 ```
-
-# Evidencias
-
-## Crear Producto
-![image](https://github.com/earaucov27/PreEntrega2EdisonArauco/assets/78817982/98e9ca8e-506f-4248-974a-a2939ec4b82c)
-
-## Listar Productos
-![image](https://github.com/earaucov27/PreEntrega2EdisonArauco/assets/78817982/2ed3d409-aa40-47c6-a6d3-a104132d7f98)
-
-## Listar Producto por ID
-![image](https://github.com/earaucov27/PreEntrega2EdisonArauco/assets/78817982/beb0d5f7-7e9a-470e-b35e-bf72ace3fd2f)
-
-## Modificar Producto
-![image](https://github.com/earaucov27/PreEntrega2EdisonArauco/assets/78817982/d002ed2e-9e9b-4433-9b73-539dc7cf6ab8)
-
-## Listar Producto Modificado 
-![image](https://github.com/earaucov27/PreEntrega2EdisonArauco/assets/78817982/ad7551c1-909e-4de6-b405-c88727c97340)
-
-## Borrar Producto
-![image](https://github.com/earaucov27/PreEntrega2EdisonArauco/assets/78817982/8d2b3b73-0780-435f-81b7-b2f3d95ac2c5)
